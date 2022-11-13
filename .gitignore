@@ -1,3 +1,7 @@
-.vscode/
+.vscode/*
 !.vscode/settings.json
 !.vscode/recommended.json
+
+.idea/
+lox.iml
+out/
