@@ -9,12 +9,15 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Lox {
+  private static final Interpreter interpreter = new Interpreter();
   static boolean hadError = false;
+  static boolean hadRuntimeError = false;
 
   public static void main(String[] args) throws IOException {
     if (args.length > 1) {
       System.out.println("Usage: jlox [script]");
-      System.exit(64);
+      if (hadError) System.exit(64);
+      if (hadRuntimeError) System.exit(70);
     } else if (args.length == 1) {
       runFile(args[0]);
     } else {
@@ -52,11 +55,16 @@ public class Lox {
     // Stop if there was a syntax error
     if (hadError) return;
 
-    System.out.println(new AstPrinter().print(expression));
+    interpreter.interpret(expression);
   }
 
   static void error(int line, String message) {
     report(line, "", message);
+  }
+
+  static void runtimeError(RuntimeError error) {
+    System.err.println(error.getMessage() + "\n[line " error.token.line + "]");
+    hasRuntimeError = true;
   }
 
   static void error(Token token, String message) {
