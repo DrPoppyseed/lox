@@ -6,6 +6,11 @@ public class AstPrinter implements Expr.Visitor<String> {
   }
 
   @Override
+  public String visitAssignExpr(Expr.Assign expr) {
+    return parenthesize2("=", expr.name.lexeme, expr.value);
+  }
+
+  @Override
   public String visitBinaryExpr(Expr.Binary expr) {
     return parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
@@ -26,6 +31,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     return parenthesize(expr.operator.lexeme, expr.right);
   }
 
+  @Override
+  public String visitVariableExpr(Expr.Variable expr) {
+    return expr.name.lexeme;
+  }
+
   private String parenthesize(String name, Expr... exprs) {
     StringBuilder builder = new StringBuilder();
 
@@ -35,18 +45,41 @@ public class AstPrinter implements Expr.Visitor<String> {
       builder.append(expr.accept(this));
     }
     builder.append(")");
-    
+
     return builder.toString();
+  }
+
+  private String parenthesize2(String name, Object... parts) {
+    StringBuilder builder = new StringBuilder();
+
+    builder.append("(").append(name);
+    transform(builder, parts);
+    builder.append(")");
+
+    return builder.toString();
+  }
+
+  private void transform(StringBuilder builder, Object... parts) {
+    for (Object part : parts) {
+      builder.append(" ");
+      if (part instanceof Expr) {
+        builder.append(((Expr) part).accept(this));
+      } else if (part instanceof Token) {
+        builder.append(((Token) part).lexeme);
+      } else {
+        builder.append(part);
+      }
+    }
   }
 
   public static void main(String[] args) {
     Expr expression = new Expr.Binary(
-      new Expr.Unary(
-        new Token(TokenType.MINUS, "-", null, 1), 
-        new Expr.Literal(123)),
-      new Token(TokenType.STAR, "*", null, 1), 
-      new Expr.Grouping(new Expr.Literal(45.67)));
-  
+        new Expr.Unary(
+            new Token(TokenType.MINUS, "-", null, 1),
+            new Expr.Literal(123)),
+        new Token(TokenType.STAR, "*", null, 1),
+        new Expr.Grouping(new Expr.Literal(45.67)));
+
     System.out.println(new AstPrinter().print(expression));
   }
 }
